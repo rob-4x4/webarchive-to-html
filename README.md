@@ -10,7 +10,7 @@ For converting .webarchive to a complete resources embed .html, there is also [w
 
 ### Install
 ```shell
-> go get github.com/gonejack/webarchive-to-html
+> go install github.com/gonejack/webarchive-to-html@latest
 ```
 
 ### Usage
