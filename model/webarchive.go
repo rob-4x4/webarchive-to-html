@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/PuerkitoBio/goquery"
 	"howett.net/plist"
@@ -23,6 +24,29 @@ type WebArchive struct {
 
 	doc *goquery.Document
 	res map[string]*Resources
+}
+
+func sanitizeFolderName(name string) string {
+	replacer := strings.NewReplacer(
+		":", "_",
+		"*", "_",
+		"?", "_",
+		"\"", "_",
+		"<", "_",
+		">", "_",
+		"|", "_",
+		"/", "_",
+		"\\", "_",
+	)
+	sanitized := replacer.Replace(name)
+
+	if utf8.RuneCountInString(sanitized) > 50 {
+		runes := []rune(sanitized)
+		sanitized = string(runes[:50])
+	}
+
+	sanitized = strings.TrimSpace(sanitized)
+	return sanitized
 }
 
 func (w *WebArchive) From(warc string) (err error) {
@@ -91,8 +115,9 @@ func (w *WebArchive) ExtractResources(dir string) (map[string]string, error) {
 				ext = xs[0]
 			}
 		}
-
-		name := path.Join(dir, r.WebResourceMIMEType, fmt.Sprintf("%d%s", i, ext))
+		sanitizedMIME := sanitizeFolderName(r.WebResourceMIMEType)
+		name := path.Join(dir, sanitizedMIME, fmt.Sprintf("%d%s", i, ext))
+		// name := path.Join(dir, r.WebResourceMIMEType, fmt.Sprintf("%d%s", i, ext))
 		err := os.MkdirAll(filepath.Dir(name), 0766)
 		if err != nil {
 			return nil, err

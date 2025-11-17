@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/alecthomas/kong"
@@ -24,6 +25,30 @@ type options struct {
 
 type WarToHtml struct {
 	options
+}
+
+// sanitizeFolderName replaces invalid Windows filename characters and shortens long names
+func sanitizeFolderName(name string) string {
+	replacer := strings.NewReplacer(
+		":", "_",
+		"*", "_",
+		"?", "_",
+		"\"", "_",
+		"<", "_",
+		">", "_",
+		"|", "_",
+		"/", "_",
+		"\\", "_",
+	)
+	sanitized := replacer.Replace(name)
+
+	if utf8.RuneCountInString(sanitized) > 50 {
+		runes := []rune(sanitized)
+		sanitized = string(runes[:50])
+	}
+
+	sanitized = strings.TrimSpace(sanitized)
+	return sanitized
 }
 
 func (c *WarToHtml) Run() (err error) {
@@ -72,7 +97,9 @@ func (c *WarToHtml) convert(webarchive string) (err error) {
 	}
 
 	// extract resources
-	basename := strings.TrimSuffix(filepath.Base(webarchive), filepath.Ext(webarchive))
+	originalBase := strings.TrimSuffix(filepath.Base(webarchive), filepath.Ext(webarchive))
+	basename := sanitizeFolderName(originalBase)
+	// basename := strings.TrimSuffix(filepath.Base(webarchive), filepath.Ext(webarchive))
 	res, err := warc.ExtractResources(path.Join(".", fmt.Sprintf("%s_files", basename)))
 	if err != nil {
 		return fmt.Errorf("could not extract files: %w", err)
