@@ -2,18 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"unicode/utf8"
 
-	"github.com/PuerkitoBio/goquery"
-	"github.com/alecthomas/kong"
+	"github.com/jung-kurt/gofpdf"
 
-	"github.com/gonejack/webarchive-to-html/model"
+	// Assuming you have these in your project
+
+	"yourmodule/model"
 )
 
 type options struct {
